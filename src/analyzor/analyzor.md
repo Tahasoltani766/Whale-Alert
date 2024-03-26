@@ -12,4 +12,15 @@
 
 > 5 : Calculation of influence on the token in Cex-s
 
+> 6 : Return to model creator 
+
+```
+function read database
+frunction check block transactions
+function check trades 
+function Calculate impact transaction
+function Calculate impact tokens in cex-s
+function returner 
+```
+
 

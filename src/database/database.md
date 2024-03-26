@@ -10,3 +10,11 @@
  
 > 4 : Return data to analyzor 
 
+```
+frunction Receive data (scarper & cexs analyzer)
+function sort data 
+function sort cexs analyzer
+function create sqlit
+function save table in sqlit 
+function returner 
+```

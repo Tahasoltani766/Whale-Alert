@@ -10,3 +10,9 @@
 
 > 4 : Return to database
 
+```
+function connection to cexs
+frunction get trade data
+function analyze data 
+function send to database
+```

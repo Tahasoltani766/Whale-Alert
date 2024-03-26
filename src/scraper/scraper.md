@@ -10,3 +10,15 @@
 > 4 : keep track of holders 
 
 > 5 : Send data to database 
+
+
+```
+function connection
+frunction get token 
+function get holders token
+function process data
+function send to database
+function keep track
+function add new holder
+function balance checker
+```
