@@ -7,4 +7,6 @@
 
 > 3 : Take holders token and balance 
 
-> 4 : Send data to database 
+> 4 : keep track of holders 
+
+> 5 : Send data to database 

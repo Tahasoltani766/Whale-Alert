@@ -2,9 +2,9 @@
 
 ## TODO:
 
-> 1 : Receive data from scraper
+> 1 : Receive data from scraper & cex analyzer
 
-> 2 : Sorting and arrangement of data and tables (Address Wallet , Token , Balance)
+> 2 : Sorting and arrangement of data and tables (Address Wallet , Token , Balance) & cex analyzer
 
 > 3 : Save table in sqlite 
  

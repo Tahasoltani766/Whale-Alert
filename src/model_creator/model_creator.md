@@ -2,8 +2,10 @@
 
 ## TODO:
 
-> 1: Normalize Data
+> 1 : Normalize Data
 
-> 2: Fundamental model 
+> 2 : Normalize CEXS Data
 
-> 3: Prediction algorithm 
+> 3 : Fundamental model 
+
+> 4 : Prediction algorithm 
