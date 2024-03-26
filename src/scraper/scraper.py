@@ -27,4 +27,4 @@ class Scrapper:
         pass
 
     def send_to_database(self):
-    pass
+        pass
