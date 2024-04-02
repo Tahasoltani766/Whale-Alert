@@ -41,22 +41,8 @@ f = {'args': {'from': '0x56Eddb7aa87536c09CCc2793473599fD21A8b17F', 'to': '0x168
 
 x = [a, b, c, d, e, f]
 
-
-#
-# def data(x):
-#     dt = {None: None}
-#     index = [None]
-#     df = pd.DataFrame(dt, index=index)
-#     column_names = df.columns
-#     for i in x:
-#         to = (i['args']['to'])
-#         value = (i['args']['value'])
-#         tk = (i['address'])
-#         if tk in column_names:
-#             pass
-#         else:
-#             df[tk] = None
 from web3 import Web3
+
 rpc_url = 'https://eth-mainnet.g.alchemy.com/v2/kurV79OJ-CdKRuj6nc0Ua-JYhXGVdjcA'
 w3 = Web3(Web3.HTTPProvider(rpc_url))
 
@@ -130,6 +116,7 @@ abi_token = """[{"constant":true,"inputs":[],"name":"name","outputs":[{"name":""
 "name":"Transfer","type":"event"},{"anonymous":false,"inputs":[],"name":"Pause","type":"event"},{"anonymous":false,
 "inputs":[],"name":"Unpause","type":"event"}]"""
 
+
 def trx_transfer():
     while True:
         weth_contract = w3.eth.contract(address=adr_token, abi=abi_token)
@@ -144,27 +131,33 @@ class dataFrame:
         self.df = pd.DataFrame(dt, index=index)
         self.table = np.empty((0, 4), dtype=object)
 
-    def handler_data(self, x):
+    def handler_data(self, list_trx):
         if not self.table.size:
-            for i in x:
-                _to = (i['args']['to'])
-                _from = (i['args']['from'])
-                _value = (i['args']['value'])
-                _token = (i['address'])
+            for trx in list_trx:
+                # print(i.args.to)
+                _to = (trx.args.to)
+                _from = (trx.args['from'])
+                _value = (trx.args.value)
+                _token = (trx.address)
+                print()
                 new_row = np.array([_to, _value, _from, _token])
+                print(new_row)
                 self.table = np.vstack([self.table, new_row])
         else:
-            for i in x:
-                _to = (i['args']['to'])
-                _from = (i['args']['from'])
-                _value = (i['args']['value'])
-                _token = (i['address'])
+            for trx in list_trx:
+                _to = (trx.args.to)
+                _from = (trx.args['from'])
+                _value = (trx.args.value)
+                _token = (trx.address)
                 new_row = np.array([_to, _value, _from, _token])
+                print(new_row)
                 self.table = np.vstack([self.table, new_row[None, :]])
-        # print(self.table)
-    def addr_checker(self):
-        _to = self.table[:, 0]
-        values = self.table[:, 1]
+            # self.addr_checker(self.table)
+
+    def addr_checker(self,table):
+        _to = table[:, 0]
+        values = table[:, 1]
+        print(_to, values)
         unique_addresses, counts = np.unique(_to, return_counts=True)
         similar_addresses = unique_addresses[counts > 1]
         if len(similar_addresses) > 0:
@@ -183,18 +176,12 @@ class dataFrame:
             pass
 
     # def counter_from(self):
-        # pass
+    # pass
 
     # def counter_to(self,similar):
-        # print(similar)
-
-
+    # print(similar)
 
 
 d = dataFrame()
-d.addr_checker()
 trx_transfer()
-# d.handler_dat/////////////a()
-# d.counter_to()
-
-# data(x)
+# d.addr_checker()
