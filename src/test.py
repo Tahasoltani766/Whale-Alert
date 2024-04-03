@@ -1,45 +1,8 @@
+import time
+from pprint import pprint
 from web3.types import HexBytes
 import pandas as pd
 import numpy as np
-
-a = {'args': {'from': '0x9a719029eDC50A1eEb12e8bdf31ad85863199488', 'to': '0x11b815efB8f581194ae79006d24E0d814B7697F6',
-              'value': 5000000000}, 'event': 'Transfer', 'logIndex': 267, 'transactionIndex': 132,
-     'transactionHash': HexBytes('0xda351a6253eceb0ab68e9920535f0be0ef712ec65f4915e2622f7959082500dc'),
-     'address': '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-     'blockHash': HexBytes('0xfd79f8784fea538105f528603c75348dbbb44c8bf13fc95e876c2676d7c97531'),
-     'blockNumber': 19567045}
-b = {'args': {'from': '0x5D39036947e83862cE5f3DB351cC64E3D4592cD5', 'to': '0x11b815efB8f581194ae79006d24E0d814B7697F6',
-              'value': 3500000000}, 'event': 'Transfer', 'logIndex': 312, 'transactionIndex': 157,
-     'transactionHash': HexBytes('0x6bd3c5f1e2d33beb9e2d7d37d130d94e6656fbd34858bffc6e36e040f751d773'),
-     'address': '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-     'blockHash': HexBytes('0xfd79f8784fea538105f528603c75348dbbb44c8bf13fc95e876c2676d7c97531'),
-     'blockNumber': 19567045}
-c = {'args': {'from': '0x121671AE76BCF934247c17334F4a42B620Da869A', 'to': '0x1689a089AA12d6CbBd88bC2755E4c192f8702000',
-              'value': 29440000000}, 'event': 'Transfer', 'logIndex': 72, 'transactionIndex': 18,
-     'transactionHash': HexBytes('0x65d2204b5f1b3c6b320cec47da070a48dbec7c34f56c66b1c2568724b6b61d73'),
-     'address': '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-     'blockHash': HexBytes('0x73713b6f40d641e74e3994bddc3381299c7ac51bf4e2715e5772f767ac11680d'),
-     'blockNumber': 19567046}
-d = {'args': {'from': '0x6c1aAFCB90bc4c8ec52ff3e135B4E1C1150C7C5f', 'to': '0x81752746F87153a72cd4b8911a8BbE6e3321Fd25',
-              'value': 1250000000}, 'event': 'Transfer', 'logIndex': 73, 'transactionIndex': 20,
-     'transactionHash': HexBytes('0x28b9f1279960e7b838879029d3c92ae9877688658993da29e508c69a48da5e02'),
-     'address': '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-     'blockHash': HexBytes('0x73713b6f40d641e74e3994bddc3381299c7ac51bf4e2715e5772f767ac11680d'),
-     'blockNumber': 19567046}
-e = {'args': {'from': '0x34fd698C00bD9eCF3cd07C29D0f49e7b0f7702D6', 'to': '0x1689a089AA12d6CbBd88bC2755E4c192f8702000',
-              'value': 150000000}, 'event': 'Transfer', 'logIndex': 74, 'transactionIndex': 21,
-     'transactionHash': HexBytes('0xef519331add30f569e0f908b54288f39af5eba0d411f74353f3259494e5a3588'),
-     'address': '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-     'blockHash': HexBytes('0x73713b6f40d641e74e3994bddc3381299c7ac51bf4e2715e5772f767ac11680d'),
-     'blockNumber': 19567046}
-f = {'args': {'from': '0x56Eddb7aa87536c09CCc2793473599fD21A8b17F', 'to': '0x1689a089AA12d6CbBd88bC2755E4c192f8702000',
-              'value': 48044940000}, 'event': 'Transfer', 'logIndex': 85, 'transactionIndex': 31,
-     'transactionHash': HexBytes('0xafbdba10be75f3922ca780ffe50578fb1d07c0a705839c46c53711f9996d66f1'),
-     'address': '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-     'blockHash': HexBytes('0x73713b6f40d641e74e3994bddc3381299c7ac51bf4e2715e5772f767ac11680d'),
-     'blockNumber': 19567046}
-
-x = [a, b, c, d, e, f]
 
 from web3 import Web3
 
@@ -118,10 +81,12 @@ abi_token = """[{"constant":true,"inputs":[],"name":"name","outputs":[{"name":""
 
 
 def trx_transfer():
+    list_trx = []
     while True:
         weth_contract = w3.eth.contract(address=adr_token, abi=abi_token)
-        logs = weth_contract.events.Transfer().get_logs(fromBlock=19568106, toBlock='latest')
-        d.handler_data(logs)
+        logs = weth_contract.events.Transfer().get_logs(fromBlock=19573375, toBlock='latest')
+        for trx in logs:
+            d.handler_data(trx)
 
 
 class dataFrame:
@@ -131,57 +96,81 @@ class dataFrame:
         self.df = pd.DataFrame(dt, index=index)
         self.table = np.empty((0, 4), dtype=object)
 
-    def handler_data(self, list_trx):
+    def handler_data(self, trx):
         if not self.table.size:
-            for trx in list_trx:
-                # print(i.args.to)
-                _to = (trx.args.to)
-                _from = (trx.args['from'])
-                _value = (trx.args.value)
-                _token = (trx.address)
-                print()
-                new_row = np.array([_to, _value, _from, _token])
-                print(new_row)
-                self.table = np.vstack([self.table, new_row])
+            _to = (trx.args.to)
+            _from = (trx.args['from'])
+            _value = (trx.args.value)
+            _token = (trx.address)
+            new_row = np.array([_to, _value, _from, _token])
+            self.table = np.vstack([self.table, new_row])
         else:
-            for trx in list_trx:
-                _to = (trx.args.to)
-                _from = (trx.args['from'])
-                _value = (trx.args.value)
-                _token = (trx.address)
-                new_row = np.array([_to, _value, _from, _token])
-                print(new_row)
-                self.table = np.vstack([self.table, new_row[None, :]])
-            # self.addr_checker(self.table)
+            _to = (trx.args.to)
+            _from = (trx.args['from'])
+            _value = (trx.args.value)
+            _token = (trx.address)
+            new_row = np.array([_to, _value, _from, _token])
+            self.table = np.vstack([self.table, new_row[None, :]])
+            if len(self.table) >= 100:
+                self.addr_to_checker(self.table)
+                self.addr_from_checker(self.table)
+                self.table = np.empty((0, 4), dtype=object)
+                time.sleep(100000)
 
-    def addr_checker(self,table):
+    def addr_to_checker(self, table):
+        list_increase = []
         _to = table[:, 0]
         values = table[:, 1]
-        print(_to, values)
+        _token = table[:, 3]
         unique_addresses, counts = np.unique(_to, return_counts=True)
         similar_addresses = unique_addresses[counts > 1]
+        indices_to_remove = np.where(np.isin(_to, similar_addresses))
+        different_addresses = np.delete(_to, indices_to_remove)
+        for addr in different_addresses:
+            tr = np.where(_to == addr)
+            val = values[tr][0]
+            tok = _token[tr][0]
+            increase_different = [addr, val, tok]
+            list_increase.append(increase_different)
         if len(similar_addresses) > 0:
             for address in similar_addresses:
                 indices = np.where(_to == address)[0]
                 val = values[indices]
-                result = sum(map(int, val))
-                print(result)
-                similar_reps = self.table[indices]
-                flattend = similar_reps.flatten()
-                unique_values = set(flattend)
-                merged_arr = np.array(list(unique_values))
-                print(merged_arr)
-                # self.counter_to(similar_reps)
+                tk = _token[indices][0]
+                result_val = sum(map(int, val))
+                addr_to = _to[indices][0]
+                similar_increase = [addr_to, result_val, tk]
+                list_increase.append(similar_increase)
         else:
             pass
 
-    # def counter_from(self):
-    # pass
-
-    # def counter_to(self,similar):
-    # print(similar)
+    def addr_from_checker(self, table):
+        list_decrease = []
+        _from = table[:, 2]
+        values = table[:, 1]
+        _token = table[:, 3]
+        unique_addresses, counts = np.unique(_from, return_counts=True)
+        similar_addresses = unique_addresses[counts > 1]
+        indices_to_remove = np.where(np.isin(_from, similar_addresses))
+        different_addresses = np.delete(_from, indices_to_remove)
+        for addr in different_addresses:
+            tr = np.where(_from == addr)
+            val = int(values[tr][0])
+            tok = _token[tr][0]
+            increase_different = [addr, -val, tok]
+            print(increase_different)
+            list_decrease.append(increase_different)
+        if len(similar_addresses) > 0:
+            for address in similar_addresses:
+                indices = np.where(_from == address)[0]
+                val = values[indices]
+                tk = _token[indices][0]
+                result_val = sum(map(int, val))
+                addr_from = _from[indices][0]
+                similar_decrease = [addr_from, -result_val, tk]
+                list_decrease.append(similar_decrease)
+                print(similar_decrease)
 
 
 d = dataFrame()
 trx_transfer()
-# d.addr_checker()
