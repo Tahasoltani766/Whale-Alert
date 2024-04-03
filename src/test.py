@@ -84,7 +84,7 @@ def trx_transfer():
     list_trx = []
     while True:
         weth_contract = w3.eth.contract(address=adr_token, abi=abi_token)
-        logs = weth_contract.events.Transfer().get_logs(fromBlock=19573375, toBlock='latest')
+        logs = weth_contract.events.Transfer().get_logs(fromBlock=19573380, toBlock='latest')
         for trx in logs:
             d.handler_data(trx)
 
@@ -111,13 +111,15 @@ class dataFrame:
             _token = (trx.address)
             new_row = np.array([_to, _value, _from, _token])
             self.table = np.vstack([self.table, new_row[None, :]])
-            if len(self.table) >= 100:
-                self.addr_to_checker(self.table)
-                self.addr_from_checker(self.table)
+            if len(self.table) >= 5:
+                self.addr_to_checker()
+                self.addr_from_checker()
                 self.table = np.empty((0, 4), dtype=object)
-                time.sleep(100000)
+                time.sleep(5)
 
-    def addr_to_checker(self, table):
+    def addr_to_checker(self):
+        table = self.table
+        print(table)
         list_increase = []
         _to = table[:, 0]
         values = table[:, 1]
@@ -141,10 +143,10 @@ class dataFrame:
                 addr_to = _to[indices][0]
                 similar_increase = [addr_to, result_val, tk]
                 list_increase.append(similar_increase)
-        else:
-            pass
+        self.generator_dataframe(list_increase)
 
-    def addr_from_checker(self, table):
+    def addr_from_checker(self):
+        table = self.table
         list_decrease = []
         _from = table[:, 2]
         values = table[:, 1]
@@ -168,8 +170,12 @@ class dataFrame:
                 result_val = sum(map(int, val))
                 addr_from = _from[indices][0]
                 similar_decrease = [addr_from, -result_val, tk]
-                list_decrease.append(similar_decrease)
                 print(similar_decrease)
+                list_decrease.append(similar_decrease)
+        self.generator_dataframe(list_decrease)
+
+    def generator_dataframe(self, dt):
+        pass
 
 
 d = dataFrame()
