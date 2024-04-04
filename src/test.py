@@ -1,9 +1,6 @@
 import time
-from pprint import pprint
-from web3.types import HexBytes
 import pandas as pd
 import numpy as np
-
 from web3 import Web3
 
 rpc_url = 'https://eth-mainnet.g.alchemy.com/v2/kurV79OJ-CdKRuj6nc0Ua-JYhXGVdjcA'
@@ -81,10 +78,9 @@ abi_token = """[{"constant":true,"inputs":[],"name":"name","outputs":[{"name":""
 
 
 def trx_transfer():
-    list_trx = []
     while True:
         weth_contract = w3.eth.contract(address=adr_token, abi=abi_token)
-        logs = weth_contract.events.Transfer().get_logs(fromBlock=19573380, toBlock='latest')
+        logs = weth_contract.events.Transfer().get_logs(fromBlock=19580959, toBlock='latest')
         for trx in logs:
             d.handler_data(trx)
 
@@ -95,7 +91,10 @@ class dataFrame:
         index = []
         self.df = pd.DataFrame(dt, index=index)
         self.table = np.empty((0, 4), dtype=object)
-
+        self.to = self.table[:,0]
+        self.values = self.table[:, 1]
+        self.from_ = self.table[:, 2]
+        self.token = self.table[:, 3]
     def handler_data(self, trx):
         if not self.table.size:
             _to = (trx.args.to)
@@ -111,39 +110,44 @@ class dataFrame:
             _token = (trx.address)
             new_row = np.array([_to, _value, _from, _token])
             self.table = np.vstack([self.table, new_row[None, :]])
-            if len(self.table) >= 5:
+            if len(self.table) >= 500:
+                # self.address_checker()
                 self.addr_to_checker()
                 self.addr_from_checker()
                 self.table = np.empty((0, 4), dtype=object)
-                time.sleep(5)
+                time.sleep(2)
+
+    def similar_checker(self, addr):
+        unique_addresses, counts = np.unique(addr, return_counts=True)
+        similar_addresses = unique_addresses[counts > 1]
+        indices_to_remove = np.where(np.isin(addr, similar_addresses))
+        different_addresses = np.delete(addr, indices_to_remove)
+        return similar_addresses, different_addresses
 
     def addr_to_checker(self):
-        table = self.table
-        print(table)
         list_increase = []
+        table = self.table
         _to = table[:, 0]
-        values = table[:, 1]
+        _values = table[:, 1]
         _token = table[:, 3]
-        unique_addresses, counts = np.unique(_to, return_counts=True)
-        similar_addresses = unique_addresses[counts > 1]
-        indices_to_remove = np.where(np.isin(_to, similar_addresses))
-        different_addresses = np.delete(_to, indices_to_remove)
+        similar_addresses, different_addresses = self.similar_checker(_to)
+
         for addr in different_addresses:
             tr = np.where(_to == addr)
-            val = values[tr][0]
+            val = _values[tr][0]
             tok = _token[tr][0]
             increase_different = [addr, val, tok]
             list_increase.append(increase_different)
         if len(similar_addresses) > 0:
             for address in similar_addresses:
                 indices = np.where(_to == address)[0]
-                val = values[indices]
+                val = _values[indices]
                 tk = _token[indices][0]
                 result_val = sum(map(int, val))
                 addr_to = _to[indices][0]
                 similar_increase = [addr_to, result_val, tk]
                 list_increase.append(similar_increase)
-        self.generator_dataframe(list_increase)
+        # self.generator_dataframe(list_increase)
 
     def addr_from_checker(self):
         table = self.table
@@ -151,17 +155,15 @@ class dataFrame:
         _from = table[:, 2]
         values = table[:, 1]
         _token = table[:, 3]
-        unique_addresses, counts = np.unique(_from, return_counts=True)
-        similar_addresses = unique_addresses[counts > 1]
-        indices_to_remove = np.where(np.isin(_from, similar_addresses))
-        different_addresses = np.delete(_from, indices_to_remove)
+
+        similar_addresses, different_addresses = self.similar_checker(_from)
+
         for addr in different_addresses:
             tr = np.where(_from == addr)
             val = int(values[tr][0])
             tok = _token[tr][0]
-            increase_different = [addr, -val, tok]
-            print(increase_different)
-            list_decrease.append(increase_different)
+            decrease_different = [addr, -val, tok]
+            list_decrease.append(decrease_different)
         if len(similar_addresses) > 0:
             for address in similar_addresses:
                 indices = np.where(_from == address)[0]
@@ -170,10 +172,7 @@ class dataFrame:
                 result_val = sum(map(int, val))
                 addr_from = _from[indices][0]
                 similar_decrease = [addr_from, -result_val, tk]
-                print(similar_decrease)
                 list_decrease.append(similar_decrease)
-        self.generator_dataframe(list_decrease)
-
     def generator_dataframe(self, dt):
         pass
 
