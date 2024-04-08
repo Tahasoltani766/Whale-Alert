@@ -3,7 +3,8 @@ import pandas as pd
 import numpy as np
 from web3 import Web3
 
-rpc_url = 'https://eth-mainnet.g.alchemy.com/v2/kurV79OJ-CdKRuj6nc0Ua-JYhXGVdjcA'
+rpc_url = 'https://mainnet.infura.io/v3/8cb9d441420b4009afa02ce71849560e'
+# rpc_url = 'https://eth-mainnet.g.alchemy.com/v2/kurV79OJ-CdKRuj6nc0Ua-JYhXGVdjcA'
 w3 = Web3(Web3.HTTPProvider(rpc_url))
 
 print(w3.is_connected())
@@ -80,7 +81,7 @@ abi_token = """[{"constant":true,"inputs":[],"name":"name","outputs":[{"name":""
 def trx_transfer():
     while True:
         weth_contract = w3.eth.contract(address=adr_token, abi=abi_token)
-        logs = weth_contract.events.Transfer().get_logs(fromBlock=19580959, toBlock='latest')
+        logs = weth_contract.events.Transfer().get_logs(fromBlock=19610000, toBlock='latest')
         for trx in logs:
             d.handler_data(trx)
 
@@ -91,10 +92,11 @@ class dataFrame:
         index = []
         self.df = pd.DataFrame(dt, index=index)
         self.table = np.empty((0, 4), dtype=object)
-        self.to = self.table[:,0]
+        self.to = self.table[:, 0]
         self.values = self.table[:, 1]
         self.from_ = self.table[:, 2]
         self.token = self.table[:, 3]
+
     def handler_data(self, trx):
         if not self.table.size:
             _to = (trx.args.to)
@@ -124,55 +126,41 @@ class dataFrame:
         different_addresses = np.delete(addr, indices_to_remove)
         return similar_addresses, different_addresses
 
-    def addr_to_checker(self):
+    def s(self, from_addr=False):
         list_increase = []
-        table = self.table
-        _to = table[:, 0]
-        _values = table[:, 1]
-        _token = table[:, 3]
-        similar_addresses, different_addresses = self.similar_checker(_to)
+        _values = self.table[:, 1]
+        _token = self.table[:, 3]
+
+        addr_check = self.table[:, 0]
+        multiplier = 1
+        if from_addr:
+            addr_check = self.table[:, 2]
+            multiplier = -1
+        similar_addresses, different_addresses = self.similar_checker(addr_check)
 
         for addr in different_addresses:
-            tr = np.where(_to == addr)
-            val = _values[tr][0]
+            tr = np.where(addr_check == addr)
+            val = int(_values[tr][0])
             tok = _token[tr][0]
-            increase_different = [addr, val, tok]
-            list_increase.append(increase_different)
+            decrease_different = [addr, multiplier * val, tok]
+            list_increase.append(decrease_different)
         if len(similar_addresses) > 0:
             for address in similar_addresses:
-                indices = np.where(_to == address)[0]
+                indices = np.where(addr_check == address)[0]
                 val = _values[indices]
                 tk = _token[indices][0]
                 result_val = sum(map(int, val))
-                addr_to = _to[indices][0]
-                similar_increase = [addr_to, result_val, tk]
-                list_increase.append(similar_increase)
-        # self.generator_dataframe(list_increase)
+                addr_from = addr_check[indices][0]
+                similar_decrease = [addr_from, multiplier * result_val, tk]
+                list_increase.append(similar_decrease)
+        return list_increase
+
+    def addr_to_checker(self):
+        self.s(False)
 
     def addr_from_checker(self):
-        table = self.table
-        list_decrease = []
-        _from = table[:, 2]
-        values = table[:, 1]
-        _token = table[:, 3]
+        self.s(True)
 
-        similar_addresses, different_addresses = self.similar_checker(_from)
-
-        for addr in different_addresses:
-            tr = np.where(_from == addr)
-            val = int(values[tr][0])
-            tok = _token[tr][0]
-            decrease_different = [addr, -val, tok]
-            list_decrease.append(decrease_different)
-        if len(similar_addresses) > 0:
-            for address in similar_addresses:
-                indices = np.where(_from == address)[0]
-                val = values[indices]
-                tk = _token[indices][0]
-                result_val = sum(map(int, val))
-                addr_from = _from[indices][0]
-                similar_decrease = [addr_from, -result_val, tk]
-                list_decrease.append(similar_decrease)
     def generator_dataframe(self, dt):
         pass
 
