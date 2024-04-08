@@ -119,6 +119,7 @@ class dataFrame:
                 self.table = np.empty((0, 4), dtype=object)
                 time.sleep(2)
 
+
     def similar_checker(self, addr):
         unique_addresses, counts = np.unique(addr, return_counts=True)
         similar_addresses = unique_addresses[counts > 1]
@@ -126,7 +127,7 @@ class dataFrame:
         different_addresses = np.delete(addr, indices_to_remove)
         return similar_addresses, different_addresses
 
-    def s(self, from_addr=False):
+    def addr_handler(self, from_addr=False):
         list_increase = []
         _values = self.table[:, 1]
         _token = self.table[:, 3]
