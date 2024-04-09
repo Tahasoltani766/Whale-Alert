@@ -199,7 +199,6 @@ async def subscribe_to_blocks(ws_url):
                     log_data = json.loads(log)
                     number_hex = log_data['params']['result']['number']
                     number_decimal = int(number_hex, 16)
-                    print(number_decimal)
                     trx_transfer(number_decimal)
 
         except Exception as e:
@@ -207,7 +206,5 @@ async def subscribe_to_blocks(ws_url):
             print('Reconnecting...')
             await asyncio.sleep(5)
 
-
 asyncio.run(subscribe_to_blocks(eth_node_ws_url))
 
-# trx_transfer()
