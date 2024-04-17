@@ -1,6 +1,4 @@
-import time
-from pprint import pprint
-
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from web3 import Web3
@@ -94,9 +92,10 @@ class dataFrame:
         self.from_ = self.table[:, 2]
         self.token = self.table[:, 3]
         self.dataframe = pd.DataFrame()
-        self.array_3d = pd.DataFrame(columns=['address', 'balance', 'token'])
+        self.array_3d = pd.DataFrame(columns=['address', 'balance'])
+        self.call_counter = 0
 
-    def handler_data(self, trx, number_trx):
+    def handler_data(self, trx, number_trx, blck_num):
         combined_list = []
         if not self.table.size:
             _to = (trx.args.to)
@@ -117,7 +116,7 @@ class dataFrame:
                 b = self.addr_from_checker()
                 combined_list.extend(a)
                 combined_list.extend(b)
-                self.generator_dataframe(combined_list)
+                self.generator_dataframe(combined_list, int(blck_num))
                 self.table = np.empty((0, 4), dtype=object)
 
     def similar_checker(self, addr):
@@ -162,41 +161,49 @@ class dataFrame:
     def addr_from_checker(self):
         return self.addr_handler(True)
 
-    def generator_dataframe(self, list_dt):
-        # self.array_3d.columns = ['address', 'balanceance', 'token']
+    def generator_dataframe(self, list_dt, blck_num:int):
         new_df = pd.DataFrame(list_dt)
-        if self.array_3d.empty:
-            self.array_3d = self.array_3d.append(new_df, ignore_index=True)
-        else:
-            # بررسی آیا آدرس حساب مشابهی در دیتافریم وجود دارد یا نه
-            matching_row = self.array_3d[self.array_3d['آدرس حساب'] == new_df['آدرس حساب']]
-            if not matching_row.empty:
-                # اگر آدرس حساب مشابه وجود داشته باشد، موجودی را بروزرسانی کن
-                self.array_3d.loc[matching_row.index, 'موجودی'] += new_df['موجودی']
-            else:
-                print("آدرس حساب مشابهی یافت نشد.")
-                # در غیر این صورت دیتای جدید را به دیتافریم اضافه کن
-                self.array_3d = self.array_3d.append(new_data, ignore_index=True)
-        #         similar_index = self.array_3d[self.array_3d.loc[:, 0] == address].index[0]
-        #         new_df.at[index, self.array_3d.loc[:, 1]] += self.array_3d.at[similar_index, 1]
-        # self.array_3d = pd.concat([self.array_3d, new_df], ignore_index=True)
-        print(self.array_3d)
-        # for i in list_dt:
-        #     address = f'{i[0]}'
-        #     value = i[1]
-        #     category = f'{i[2]}'
-        #     if address in self.dataframe.index:
-        #         self.dataframe.at[address, category] = self.dataframe.at[address, category] + value
-        #     else:
-        #         data = {category: [value]}
-        #         new_df = pd.DataFrame(data, index=[address])
-        #         self.dataframe = pd.concat([self.dataframe, new_df])
-        # self.dataframe.to_excel('MarksData.xlsx')
-        # print('END')
-        #
+        self.call_counter += 1
+        if self.call_counter < 3:
+            print(self.call_counter)
+            for item in new_df.values:
+                addr = item[0]
+                balance = item[1]
+                self.array_3d = pd.concat(
+                    [self.array_3d, pd.DataFrame([{'address': addr, 'balance': balance, 'block number': int(blck_num)}])],
+                    ignore_index=True)
+        elif self.call_counter == 3:
+            groups = self.array_3d.groupby('address')
+            print(groups)
+            for name, group in groups:
+                if len(group) > 1:
+                    list_of_lists = group.values.tolist()
+                    result = {}
+                    for item in list_of_lists:
+                        address = item[0]
+                        balance = item[1]
+                        block = item[2]
+                        if address not in result:
+                            result[address] = []
+                        result[address].append({'balance': balance, 'block': int(block)})
+                    print(result)
+            #         matplotlib(desired_address, tuple(new_tuple))
+            # self.call_counter = 0
 
 
 d = dataFrame()
+
+
+def matplotlib(address, balances: tuple):
+    x = range(1, len(balances) + 1)
+    plt.plot(x, balances, marker='o')
+    plt.xlabel('Price Index')
+    plt.ylabel('Value')
+    plt.title('Plot of Tuple Values\nAddress: ' + address)
+    plt.xticks(range(1, len(balances) + 1), [str(i) for i in range(1, len(balances) + 1)])
+    for i, txt in enumerate(balances):
+        plt.text(x[i], balances[i], str(balances[i]), ha='right')
+    plt.show()
 
 
 def trx_transfer(blc_num: int):
@@ -204,7 +211,7 @@ def trx_transfer(blc_num: int):
     logs = weth_contract.events.Transfer().get_logs(fromBlock=blc_num, toBlock='latest')
     number_trx = len(logs)
     for trx in logs:
-        d.handler_data(trx, number_trx)
+        d.handler_data(trx, number_trx, blc_num)
 
 
 async def subscribe_to_blocks(ws_url):
