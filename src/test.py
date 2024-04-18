@@ -77,6 +77,7 @@ abi_token = """[{"constant":true,"inputs":[],"name":"name","outputs":[{"name":""
 "type":"address"},{"indexed":true,"name":"to","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],
 "name":"Transfer","type":"event"},{"anonymous":false,"inputs":[],"name":"Pause","type":"event"},{"anonymous":false,
 "inputs":[],"name":"Unpause","type":"event"}]"""
+weth_contract = w3.eth.contract(address=adr_token, abi=abi_token)
 
 eth_node_ws_url = 'wss://eth-mainnet.g.alchemy.com/v2/c8VW6jhdLbvoyh3bEMkEfPEcSUzdezIO'
 
@@ -92,7 +93,7 @@ class dataFrame:
         self.from_ = self.table[:, 2]
         self.token = self.table[:, 3]
         self.dataframe = pd.DataFrame()
-        self.array_3d = pd.DataFrame(columns=['address', 'balance'])
+        self.array_3d = pd.DataFrame(columns=['address', 'balance', 'block number'])
         self.call_counter = 0
 
     def handler_data(self, trx, number_trx, blck_num):
@@ -161,53 +162,71 @@ class dataFrame:
     def addr_from_checker(self):
         return self.addr_handler(True)
 
-    def generator_dataframe(self, list_dt, blck_num:int):
+    def generator_dataframe(self, list_dt, blck_num: int):
+        # TODO Do not make additional requests to the address whose balance we have already calculated
         new_df = pd.DataFrame(list_dt)
         self.call_counter += 1
-        if self.call_counter < 3:
+        if self.call_counter < 10:
             print(self.call_counter)
             for item in new_df.values:
                 addr = item[0]
                 balance = item[1]
+                new_dt = pd.DataFrame([{'address': addr, 'balance': balance, 'block number': int(blck_num)}])
                 self.array_3d = pd.concat(
-                    [self.array_3d, pd.DataFrame([{'address': addr, 'balance': balance, 'block number': int(blck_num)}])],
+                    [self.array_3d, new_dt],
                     ignore_index=True)
-        elif self.call_counter == 3:
+        elif self.call_counter == 10:
             groups = self.array_3d.groupby('address')
-            print(groups)
             for name, group in groups:
                 if len(group) > 1:
                     list_of_lists = group.values.tolist()
-                    result = {}
-                    for item in list_of_lists:
-                        address = item[0]
-                        balance = item[1]
-                        block = item[2]
-                        if address not in result:
-                            result[address] = []
-                        result[address].append({'balance': balance, 'block': int(block)})
-                    print(result)
-            #         matplotlib(desired_address, tuple(new_tuple))
-            # self.call_counter = 0
+                    address = list_of_lists[0][0]
+                    balances = [entry[1] for entry in list_of_lists]
+                    blocks = [entry[2] for entry in list_of_lists]
+                    block_before = blocks[0] - 1
+                    balances_before = self.checkr_blnc(address, block_before)
+                    data = {
+                        'address': address,
+                        'balance': [balances_before] + balances,
+                        'block': [block_before] + blocks
+                    }
+                    balances = data['balance']
+                    for blnc in range(len(balances) - 1):
+                        balances[blnc + 1] += balances[blnc]
+                    final_data = {
+                        'address': address,
+                        'balance': balances,
+                        'block': [block_before] + blocks
+                    }
+                    print(final_data)
+                    self.call_counter = 0
+
+    def checkr_blnc(self, addr, blck_num):
+        blnc = weth_contract.functions.balanceOf(addr).call(block_identifier=blck_num)
+        return blnc
+
+    def matplotlib(self, data):
+        blocks = [block['block'] for block in data['blocks']]
+        balances = [block['balance'] for block in data['blocks']]
+
+        plt.plot(blocks, balances, marker='o')
+        plt.xlabel('Block')
+        plt.ylabel('Balance')
+        plt.title('Balance over Blocks')
+
+        # Setting format for x-axis and y-axis tick labels
+        plt.xticks(blocks, [f"{block:,}" for block in blocks])
+        plt.yticks(balances, [f"{balance:,}" for balance in balances])
+
+        plt.grid(True)
+        plt.show()
 
 
+# {'address': '0x3416cF6C708Da44DB2624D63ea0AAef7113527C6', 'blocks': [{'block': 19681142, 'balance': -81555822883}, {'block': 19681143, 'balance': -235863245632}, {'block': 19681145, 'balance': 28293460715}, {'block': 19681146, 'balance': 0}]}
 d = dataFrame()
 
 
-def matplotlib(address, balances: tuple):
-    x = range(1, len(balances) + 1)
-    plt.plot(x, balances, marker='o')
-    plt.xlabel('Price Index')
-    plt.ylabel('Value')
-    plt.title('Plot of Tuple Values\nAddress: ' + address)
-    plt.xticks(range(1, len(balances) + 1), [str(i) for i in range(1, len(balances) + 1)])
-    for i, txt in enumerate(balances):
-        plt.text(x[i], balances[i], str(balances[i]), ha='right')
-    plt.show()
-
-
 def trx_transfer(blc_num: int):
-    weth_contract = w3.eth.contract(address=adr_token, abi=abi_token)
     logs = weth_contract.events.Transfer().get_logs(fromBlock=blc_num, toBlock='latest')
     number_trx = len(logs)
     for trx in logs:
