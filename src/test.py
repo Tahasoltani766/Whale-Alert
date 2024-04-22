@@ -166,7 +166,7 @@ class dataFrame:
         # TODO Do not make additional requests to the address whose balance we have already calculated
         new_df = pd.DataFrame(list_dt)
         self.call_counter += 1
-        if self.call_counter < 10:
+        if self.call_counter < 3:
             print(self.call_counter)
             for item in new_df.values:
                 addr = item[0]
@@ -175,7 +175,7 @@ class dataFrame:
                 self.array_3d = pd.concat(
                     [self.array_3d, new_dt],
                     ignore_index=True)
-        elif self.call_counter == 10:
+        elif self.call_counter == 3:
             groups = self.array_3d.groupby('address')
             for name, group in groups:
                 if len(group) > 1:
@@ -198,7 +198,18 @@ class dataFrame:
                         'balance': balances,
                         'block': [block_before] + blocks
                     }
-                    print(final_data)
+                    seen_blocks = set()
+                    new_data = {'address': final_data['address'], 'balance': [], 'block': []}
+
+                    for block, balance in zip(reversed(final_data['block']), reversed(final_data['balance'])):
+                        if block not in seen_blocks:
+                            seen_blocks.add(block)
+                            new_data['block'].append(block)
+                            new_data['balance'].append(balance)
+
+                    new_data['balance'] = list(reversed(new_data['balance']))
+                    new_data['block'] = list(reversed(new_data['block']))
+                    self.matplotlib(new_data)
                     self.call_counter = 0
 
     def checkr_blnc(self, addr, blck_num):
@@ -214,15 +225,12 @@ class dataFrame:
         plt.ylabel('Balance')
         plt.title('Balance over Blocks')
 
-        # Setting format for x-axis and y-axis tick labels
         plt.xticks(blocks, [f"{block:,}" for block in blocks])
         plt.yticks(balances, [f"{balance:,}" for balance in balances])
 
         plt.grid(True)
         plt.show()
 
-
-# {'address': '0x3416cF6C708Da44DB2624D63ea0AAef7113527C6', 'blocks': [{'block': 19681142, 'balance': -81555822883}, {'block': 19681143, 'balance': -235863245632}, {'block': 19681145, 'balance': 28293460715}, {'block': 19681146, 'balance': 0}]}
 d = dataFrame()
 
 
