@@ -226,13 +226,8 @@ class dataFrame:
                     print(new_data)
                     self.call_counter = 0
     def creator_table(self,):
-        data= {'address': '0x9008D19f58AAbD9eD0D60971565AA8510560ab41', 'balance': [55759107, 38348968], 'block': [19717760, 19717761]}
-        df = pd.DataFrame(data)
-        df.set_index('address', inplace=True)
-        df.index.name = None
-        df = df.transpose()
-        df.to_excel('data.xlsx')
-        print('finish')
+        # TODO CREATE DATAFRAME
+        pass
     def checkr_blnc(self, addr, blck_num):
         blnc = weth_contract.functions.balanceOf(addr).call(block_identifier=blck_num)
         return blnc
