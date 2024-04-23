@@ -163,10 +163,9 @@ class dataFrame:
         return self.addr_handler(True)
 
     def generator_dataframe(self, list_dt, blck_num: int):
-        # TODO Do not make additional requests to the address whose balance we have already calculated
         new_df = pd.DataFrame(list_dt)
         self.call_counter += 1
-        if self.call_counter < 3:
+        if self.call_counter < 5:
             print(self.call_counter)
             for item in new_df.values:
                 addr = item[0]
@@ -175,7 +174,7 @@ class dataFrame:
                 self.array_3d = pd.concat(
                     [self.array_3d, new_dt],
                     ignore_index=True)
-        elif self.call_counter == 3:
+        elif self.call_counter == 5:
             groups = self.array_3d.groupby('address')
             for name, group in groups:
                 if len(group) > 1:
@@ -209,15 +208,37 @@ class dataFrame:
 
                     new_data['balance'] = list(reversed(new_data['balance']))
                     new_data['block'] = list(reversed(new_data['block']))
-                    self.matplotlib(new_data)
-                    self.call_counter = 0
+                    new_blocks = []
+                    new_balances = []
+                    for i in range(len(new_data['block']) - 1):
+                        new_blocks.append(new_data['block'][i])
+                        new_balances.append(new_data['balance'][i])
+                        if new_data['block'][i + 1] - new_data['block'][i] > 1:
+                            for j in range(new_data['block'][i] + 1, new_data['block'][i + 1]):
+                                new_blocks.append(j)
+                                new_balances.append(new_data['balance'][i])
+                    new_blocks.append(data['block'][-1])
+                    new_balances.append(data['balance'][-1])
 
+                    # Update the data dictionary with new blocks and balances
+                    new_data['block'] = new_blocks
+                    new_data['balance'] = new_balances
+                    print(new_data)
+                    self.call_counter = 0
+    def creator_table(self,):
+        data= {'address': '0x9008D19f58AAbD9eD0D60971565AA8510560ab41', 'balance': [55759107, 38348968], 'block': [19717760, 19717761]}
+        df = pd.DataFrame(data)
+        df.set_index('address', inplace=True)
+        df.index.name = None
+        df = df.transpose()
+        df.to_excel('data.xlsx')
+        print('finish')
     def checkr_blnc(self, addr, blck_num):
         blnc = weth_contract.functions.balanceOf(addr).call(block_identifier=blck_num)
         return blnc
 
     def matplotlib(self, data):
-        blocks = [block['block'] for block in data['blocks']]
+        blocks = [block['block'] for  block in data['blocks']]
         balances = [block['balance'] for block in data['blocks']]
 
         plt.plot(blocks, balances, marker='o')
