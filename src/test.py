@@ -223,11 +223,19 @@ class dataFrame:
                     # Update the data dictionary with new blocks and balances
                     new_data['block'] = new_blocks
                     new_data['balance'] = new_balances
-                    print(new_data)
+                    self.creator_table(new_data)
                     self.call_counter = 0
-    def creator_table(self,):
-        # TODO CREATE DATAFRAME
-        pass
+    def creator_table(self,data):
+        addr = data['address']
+        balances = data['balance']
+        balance_new = balances.copy()
+        balance_new.insert(0, addr)
+        blocks = data['block']
+        new_blocks = blocks.copy()
+        new_blocks.insert(0, "address")
+        df = pd.DataFrame([balance_new], columns=new_blocks)
+        return df
+
     def checkr_blnc(self, addr, blck_num):
         blnc = weth_contract.functions.balanceOf(addr).call(block_identifier=blck_num)
         return blnc
