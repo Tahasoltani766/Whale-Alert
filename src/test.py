@@ -1,3 +1,5 @@
+from pprint import pprint
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -165,7 +167,7 @@ class dataFrame:
     def generator_dataframe(self, list_dt, blck_num: int):
         new_df = pd.DataFrame(list_dt)
         self.call_counter += 1
-        if self.call_counter < 5:
+        if self.call_counter < 3:
             print(self.call_counter)
             for item in new_df.values:
                 addr = item[0]
@@ -174,7 +176,7 @@ class dataFrame:
                 self.array_3d = pd.concat(
                     [self.array_3d, new_dt],
                     ignore_index=True)
-        elif self.call_counter == 5:
+        elif self.call_counter == 3:
             groups = self.array_3d.groupby('address')
             for name, group in groups:
                 if len(group) > 1:
@@ -220,7 +222,6 @@ class dataFrame:
                     new_blocks.append(data['block'][-1])
                     new_balances.append(data['balance'][-1])
 
-                    # Update the data dictionary with new blocks and balances
                     new_data['block'] = new_blocks
                     new_data['balance'] = new_balances
                     self.creator_table(new_data)
@@ -234,7 +235,7 @@ class dataFrame:
         new_blocks = blocks.copy()
         new_blocks.insert(0, "address")
         df = pd.DataFrame([balance_new], columns=new_blocks)
-        return df
+        pprint(df)
 
     def checkr_blnc(self, addr, blck_num):
         blnc = weth_contract.functions.balanceOf(addr).call(block_identifier=blck_num)
