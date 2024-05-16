@@ -235,7 +235,11 @@ class dataFrame:
         new_blocks = blocks.copy()
         new_blocks.insert(0, "address")
         df = pd.DataFrame([balance_new], columns=new_blocks)
-        pprint(df)
+        print(df.to_string())
+        print()
+        print()
+        print()
+
 
     def checkr_blnc(self, addr, blck_num):
         blnc = weth_contract.functions.balanceOf(addr).call(block_identifier=blck_num)
@@ -257,14 +261,13 @@ class dataFrame:
         plt.show()
 
 d = dataFrame()
-
+#  {'from': '0x6b75d8AF000000e20B7a7DDf000Ba900b4009A80', 'to': '0xaCDb27b266142223e1e676841C1E809255Fc6d07', 'value': 13157801216}
 
 def trx_transfer(blc_num: int):
     logs = weth_contract.events.Transfer().get_logs(fromBlock=blc_num, toBlock='latest')
     number_trx = len(logs)
     for trx in logs:
         d.handler_data(trx, number_trx, blc_num)
-
 
 async def subscribe_to_blocks(ws_url):
     while True:
